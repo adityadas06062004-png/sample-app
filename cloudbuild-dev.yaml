@@ -1,24 +1,23 @@
-y
+steps:
+  # Step 0: Compile the Go Application
+  - name: 'gcr.io/cloud-builders/go'
+    env: ['GOPATH=/gopath']
+    args: ['build', '-o', 'main', 'main.go']
 
-a
-t
-# Nuclear fix - rewrite the image lines directly
-export PROJECT_ID=$(gcloud config get-value project)
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-east4-docker.pkg.dev/qwiklabs-gcp-03-ba5dec0cbfbd/my-repository/hello-cloudbuild:v2.0', '.']
 
-# Use python to do a clean replace
-python3 -c "
-import re
-with open('cloudbuild-dev.yaml', 'r') as f:
-    content = f.read()
-content = content.replace('hello-cloudbuild', 'hello-cloudbuild')
-with open('cloudbuild-dev.yaml', 'w') as f:
-    f.write(content)
-print('Done')
-"
+  # Step 2: Push the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-east4-docker.pkg.dev/qwiklabs-gcp-03-ba5dec0cbfbd/my-repository/hello-cloudbuild:v2.0']
 
-# Verify no more -dev in image names
-grep "hello-cloud" cloudbuild-dev.yaml
-
-git add cloudbuild-dev.yaml
-git commit -m "remove dev suffix from image name"
-git push origin dev
+  # Step 3: Deploy
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'Deploy'
+    args: ['-n', 'dev', 'apply', '-f', 'dev/deployment.yaml']
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-east4-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=hello-cluster'
+options:
+  logging: CLOUD_LOGGING_ONLY
