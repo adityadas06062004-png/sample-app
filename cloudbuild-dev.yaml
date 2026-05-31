@@ -1,3 +1,7 @@
+y
+
+a
+t
 # Nuclear fix - rewrite the image lines directly
 export PROJECT_ID=$(gcloud config get-value project)
 
@@ -6,7 +10,7 @@ python3 -c "
 import re
 with open('cloudbuild-dev.yaml', 'r') as f:
     content = f.read()
-content = content.replace('hello-cloudbuild-dev', 'hello-cloudbuild')
+content = content.replace('hello-cloudbuild', 'hello-cloudbuild')
 with open('cloudbuild-dev.yaml', 'w') as f:
     f.write(content)
 print('Done')
